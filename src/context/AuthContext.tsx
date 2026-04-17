@@ -7,6 +7,13 @@ interface User {
   email?: string;
   nickname?: string;
   selectedCharacter?: string;
+  avatarKey?: string;    // 用户头像的存储key
+  photos?: string[];     // 用户上传的照片key列表
+}
+
+interface PhotoUploadResult {
+  key: string;
+  url: string;
 }
 
 interface AuthContextType {
@@ -16,6 +23,9 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
+  uploadPhoto: (file: File) => Promise<PhotoUploadResult>;
+  deletePhoto: (key: string) => Promise<boolean>;
+  setAvatar: (key: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -115,6 +125,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // 上传照片
+  const uploadPhoto = async (file: File): Promise<PhotoUploadResult> => {
+    if (!user) {
+      throw new Error('请先登录');
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('userId', user.id);
+
+    const response = await fetch('/api/photo/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || '上传失败');
+    }
+
+    // 更新用户的照片列表
+    const newPhotos = [...(user.photos || []), result.key];
+    await updateProfile({ photos: newPhotos });
+
+    return {
+      key: result.key,
+      url: result.url,
+    };
+  };
+
+  // 删除照片
+  const deletePhoto = async (key: string): Promise<boolean> => {
+    if (!user) {
+      throw new Error('请先登录');
+    }
+
+    const response = await fetch(`/api/photo/delete?key=${encodeURIComponent(key)}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    // 从用户的照片列表中移除
+    const newPhotos = (user.photos || []).filter((k) => k !== key);
+    await updateProfile({ photos: newPhotos });
+
+    return true;
+  };
+
+  // 设置头像
+  const setAvatar = async (key: string): Promise<void> => {
+    await updateProfile({ avatarKey: key });
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -124,6 +191,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signIn,
         signOut,
         updateProfile,
+        uploadPhoto,
+        deletePhoto,
+        setAvatar,
       }}
     >
       {children}

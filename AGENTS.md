@@ -91,6 +91,92 @@ pnpm lint
 }
 ```
 
+## 照片存储接口
+
+使用 S3 兼容对象存储（R2）存储用户照片。
+
+### POST /api/photo/upload
+上传照片
+```json
+// FormData 格式
+{
+  "file": File,
+  "userId": "用户ID"
+}
+```
+返回：
+```json
+{
+  "success": true,
+  "key": "photos/userId/1234567890.jpg",
+  "url": "签名URL",
+  "fileName": "original.jpg",
+  "size": 102400,
+  "type": "image/jpeg"
+}
+```
+
+### GET /api/photo/url
+获取照片签名URL
+```
+GET /api/photo/url?key=photos/userId/xxx.jpg&expireTime=3600
+```
+返回：
+```json
+{
+  "success": true,
+  "key": "photos/userId/xxx.jpg",
+  "url": "签名URL",
+  "expiresIn": 3600
+}
+```
+
+### DELETE /api/photo/delete
+删除照片
+```
+DELETE /api/photo/delete?key=photos/userId/xxx.jpg
+```
+
+### GET /api/photo/list
+获取用户照片列表
+```
+GET /api/photo/list?userId=xxx&maxKeys=50
+```
+
+## 前端组件
+
+### PhotoUploader
+照片上传组件
+```tsx
+import { PhotoUploader, PhotoList } from '@/components/PhotoUploader';
+
+<PhotoUploader
+  onUploadSuccess={(key, url) => console.log(key, url)}
+  onUploadError={(error) => console.error(error)}
+  maxSize={10}
+/>
+
+<PhotoList
+  photos={['key1', 'key2']}
+  onDelete={(key) => deletePhoto(key)}
+  onSetAvatar={(key) => setAvatar(key)}
+/>
+```
+
+### AuthContext 照片方法
+```tsx
+const { uploadPhoto, deletePhoto, setAvatar, user } = useAuth();
+
+// 上传照片
+const result = await uploadPhoto(file); // { key, url }
+
+// 删除照片
+await deletePhoto(key);
+
+// 设置头像
+await setAvatar(key);
+```
+
 ## 角色系统
 
 四大古风美男：
