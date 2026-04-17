@@ -3,6 +3,15 @@
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useChat } from '@/context/ChatContext';
+import Image from 'next/image';
+
+// 角色头像URL
+const AVATARS = {
+  'pan-an': 'https://coze-coding-project.tos.coze.site/coze_storage_7629655528343568394/image/generate_image_2615bc43-9858-4b77-9af2-90633da989bc.jpeg',
+  'song-yu': 'https://coze-coding-project.tos.coze.site/coze_storage_7629655528343568394/image/generate_image_0165eb93-3528-495d-99a4-0f3d9721695c.jpeg',
+  'wei-jie': 'https://coze-coding-project.tos.coze.site/coze_storage_7629655528343568394/image/generate_image_d9783b55-25a2-48b4-b1ed-bb7e82ac2f97.jpeg',
+  'lan-ling': 'https://coze-coding-project.tos.coze.site/coze_storage_7629655528343568394/image/generate_image_2a53fbbd-8249-49d2-b51c-bd6aee3b6157.jpeg',
+};
 
 export function LandingPage() {
   const { user, signOut } = useAuth();
@@ -11,10 +20,10 @@ export function LandingPage() {
 
   // 四大角色
   const characters = [
-    { id: 'pan-an', name: '潘安', dynasty: '西晋', desc: '温润如玉，世家公子', color: 'from-amber-100 to-orange-100', icon: '🏛️' },
-    { id: 'song-yu', name: '宋玉', dynasty: '楚国', desc: '浪漫才子，辞赋家', color: 'from-purple-100 to-pink-100', icon: '📜' },
-    { id: 'wei-jie', name: '卫玠', dynasty: '魏晋', desc: '病弱清俊，玉人', color: 'from-blue-100 to-cyan-100', icon: '🌙' },
-    { id: 'lan-ling', name: '兰陵王', dynasty: '北齐', desc: '冷峻战神，反差萌', color: 'from-gray-100 to-slate-100', icon: '⚔️' },
+    { id: 'pan-an', name: '潘安', dynasty: '西晋', desc: '温润如玉，世家公子', color: 'from-amber-100 to-orange-100', icon: '🏛️', avatar: AVATARS['pan-an'] },
+    { id: 'song-yu', name: '宋玉', dynasty: '楚国', desc: '浪漫才子，辞赋家', color: 'from-purple-100 to-pink-100', icon: '📜', avatar: AVATARS['song-yu'] },
+    { id: 'wei-jie', name: '卫玠', dynasty: '魏晋', desc: '病弱清俊，玉人', color: 'from-blue-100 to-cyan-100', icon: '🌙', avatar: AVATARS['wei-jie'] },
+    { id: 'lan-ling', name: '兰陵王', dynasty: '北齐', desc: '冷峻战神，反差萌', color: 'from-gray-100 to-slate-100', icon: '⚔️', avatar: AVATARS['lan-ling'] },
   ];
 
   // 功能特点
@@ -218,11 +227,18 @@ export function LandingPage() {
                   {char.icon}
                 </div>
 
-                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-md">
-                  <span className="text-2xl font-bold text-gray-700">{char.name.charAt(0)}</span>
+                <div className="w-20 h-20 rounded-full overflow-hidden mb-4 shadow-lg border-2 border-white mx-auto">
+                  <Image
+                    src={char.avatar}
+                    alt={char.name}
+                    width={80}
+                    height={80}
+                    className="w-full h-full object-cover"
+                    unoptimized
+                  />
                 </div>
 
-                <h3 className="text-xl font-bold text-gray-900 mb-1">{char.name}</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-1 text-center">{char.name}</h3>
                 <p className="text-sm text-gray-500 mb-2">{char.dynasty}</p>
                 <p className="text-gray-700 text-sm">{char.desc}</p>
 
