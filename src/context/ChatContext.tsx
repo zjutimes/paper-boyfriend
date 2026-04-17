@@ -216,8 +216,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           }
         }
 
-        // 7. 如果有图片标记，生成图片
-        if (imagePrompt) {
+        // 7. 如果有图片标记，生成图片（每5条消息才生成一次）
+        const totalMessages = chatState.messages.length;
+        const shouldGenerateImage = imagePrompt && totalMessages > 0 && totalMessages % 5 === 0;
+        
+        if (shouldGenerateImage) {
           dispatch({ type: 'SET_GENERATING_IMAGE', payload: true });
 
           try {
