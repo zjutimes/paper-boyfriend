@@ -1,12 +1,21 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (plan: string) => void;
 }
+
+// 角色头像数据
+const characterAvatars = [
+  'https://coze-coding-project.tos.coze.site/coze_storage_7629655528343568394/image/generate_image_2615bc43-9858-4b77-9af2-90633da989bc.jpeg', // 潘安
+  'https://coze-coding-project.tos.coze.site/coze_storage_7629655528343568394/image/generate_image_0165eb93-3528-495d-99a4-0f3d9721695c.jpeg', // 宋玉
+  'https://coze-coding-project.tos.coze.site/coze_storage_7629655528343568394/image/generate_image_d9783b55-25a2-48b4-b1ed-bb7e82ac2f97.jpeg', // 卫玠
+  'https://coze-coding-project.tos.coze.site/coze_storage_7629655528343568394/image/generate_image_2a53fbbd-8249-49d2-b51c-bd6aee3b6157.jpeg', // 兰陵王
+];
 
 // 套餐数据
 const plans = [
@@ -16,6 +25,8 @@ const plans = [
     price: 30,
     originalPrice: 58,
     period: '30天',
+    avatar: characterAvatars[0],
+    characterName: '潘安',
     features: [
       '无限次聊天',
       '解锁全部角色',
@@ -32,6 +43,8 @@ const plans = [
     price: 80,
     originalPrice: 168,
     period: '90天',
+    avatar: characterAvatars[1],
+    characterName: '宋玉',
     features: [
       '无限次聊天',
       '解锁全部角色',
@@ -49,6 +62,8 @@ const plans = [
     price: 298,
     originalPrice: 698,
     period: '365天',
+    avatar: characterAvatars[3],
+    characterName: '兰陵王',
     features: [
       '无限次聊天',
       '解锁全部角色',
@@ -154,20 +169,34 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                      {/* 角色头像 */}
+                      <div className={`relative w-16 h-16 rounded-full overflow-hidden border-3 shadow-lg transition-all ${
                         selectedPlan.id === plan.id
-                          ? 'border-pink-500 bg-pink-500'
-                          : 'border-gray-300'
+                          ? 'border-pink-500 ring-4 ring-pink-200 scale-105'
+                          : 'border-gray-200'
                       }`}>
+                        <Image
+                          src={plan.avatar}
+                          alt={plan.characterName}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                        {/* 选中状态 */}
                         {selectedPlan.id === plan.id && (
-                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                          </svg>
+                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                            <div className="w-6 h-6 rounded-full bg-pink-500 flex items-center justify-center">
+                              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                              </svg>
+                            </div>
+                          </div>
                         )}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-gray-900">{plan.name}</span>
+                          <span className="text-sm text-pink-500 font-medium">({plan.characterName}伴你)</span>
                           {plan.badge && (
                             <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
                               plan.popular
