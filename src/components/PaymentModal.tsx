@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { useVIP } from '@/context/VIPContext';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -82,6 +83,7 @@ const plans = [
 type PaymentMethod = 'alipay' | 'wechat';
 
 export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) {
+  const { activateVIP } = useVIP();
   const [selectedPlan, setSelectedPlan] = useState(plans[1]); // 默认选中季卡
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('alipay');
   const [step, setStep] = useState<'select' | 'pay'>('select');
@@ -99,7 +101,10 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
     setIsPaying(false);
     setPaySuccess(true);
 
-    // 支付成功后
+    // 支付成功后，激活VIP
+    activateVIP(selectedPlan.id);
+
+    // 延迟关闭弹窗，给用户看到成功提示
     setTimeout(() => {
       onSuccess(selectedPlan.id);
       handleClose();
