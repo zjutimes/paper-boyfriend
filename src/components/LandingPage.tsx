@@ -1,10 +1,13 @@
 'use client';
 
-import { Character } from '@/types/chat';
+import { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import { useChat } from '@/context/ChatContext';
 
 export function LandingPage() {
+  const { user, signOut } = useAuth();
   const { selectCharacter } = useChat();
+  const [showLogin, setShowLogin] = useState(false);
 
   // 四大角色
   const characters = [
@@ -31,15 +34,62 @@ export function LandingPage() {
 
   // 使用步骤
   const steps = [
-    { num: '01', title: '选择你的男友', desc: '从四大美男中，选择一位心动对象' },
-    { num: '02', title: '开始聊天', desc: '像微信一样，发送消息，收到回复' },
-    { num: '03', title: '感受心动', desc: '收到语音、照片、体会被在乎的感觉' },
+    { num: '01', title: '登录/注册', desc: '创建账户，保存你的心动记录' },
+    { num: '02', title: '选择你的男友', desc: '从四大美男中，选择一位心动对象' },
+    { num: '03', title: '开始聊天', desc: '像微信一样，发送消息，收到回复' },
   ];
+
+  const handleSelectCharacter = (characterId: string) => {
+    const { getCharacterWithPrompt } = require('@/data/characters');
+    const character = getCharacterWithPrompt(characterId as any);
+    selectCharacter(character);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+          <h1 className="text-xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
+            纸片人男友
+          </h1>
+
+          {user ? (
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-400 to-purple-400 flex items-center justify-center text-white text-sm font-medium">
+                  {user.nickname?.charAt(0) || user.email?.charAt(0) || 'U'}
+                </div>
+                <span className="text-sm text-gray-700">{user.nickname || user.email}</span>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="text-sm text-gray-500 hover:text-gray-700"
+              >
+                退出
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowLogin(true)}
+              className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-sm font-medium rounded-full hover:shadow-lg transition-all"
+            >
+              登录 / 注册
+            </button>
+          )}
+        </div>
+      </nav>
+
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-pink-50 via-white to-purple-50 py-20 px-4">
+      <section className="relative overflow-hidden bg-gradient-to-br from-pink-50 via-white to-purple-50 pt-24 pb-20 px-4">
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-20 left-10 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse" />
           <div className="absolute top-40 right-10 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse" style={{ animationDelay: '1s' }} />
@@ -64,12 +114,12 @@ export function LandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href="#characters"
+            <button
+              onClick={() => user ? document.getElementById('characters')?.scrollIntoView({ behavior: 'smooth' }) : setShowLogin(true)}
               className="px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full font-semibold text-lg hover:shadow-lg hover:shadow-pink-200 transition-all hover:-translate-y-1"
             >
-              立即选择男友
-            </a>
+              {user ? '立即选择男友' : '登录后开始'}
+            </button>
             <a
               href="#features"
               className="px-8 py-4 bg-white text-gray-700 rounded-full font-semibold text-lg border-2 border-gray-200 hover:border-pink-300 transition-all"
@@ -150,17 +200,18 @@ export function LandingPage() {
             <p className="text-gray-600 text-lg">
               每一位都是历史上的绝世美男，现在只属于你
             </p>
+            {!user && (
+              <p className="mt-4 text-pink-500 text-sm">
+                登录后可保存你的心动记录
+              </p>
+            )}
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {characters.map((char) => (
               <button
                 key={char.id}
-                onClick={() => {
-                  const { getCharacterWithPrompt } = require('@/data/characters');
-                  const character = getCharacterWithPrompt(char.id as any);
-                  selectCharacter(character);
-                }}
+                onClick={() => handleSelectCharacter(char.id)}
                 className={`group relative bg-gradient-to-br ${char.color} p-6 rounded-3xl text-left hover:shadow-xl transition-all hover:-translate-y-2`}
               >
                 <div className="absolute top-4 right-4 text-4xl opacity-50 group-hover:opacity-100 transition-opacity">
@@ -260,12 +311,12 @@ export function LandingPage() {
           <p className="text-xl text-white/80 mb-8">
             现在选择，开启一段不一样的恋爱体验
           </p>
-          <a
-            href="#characters"
+          <button
+            onClick={() => user ? document.getElementById('characters')?.scrollIntoView({ behavior: 'smooth' }) : setShowLogin(true)}
             className="inline-block px-10 py-5 bg-white text-pink-600 rounded-full font-bold text-xl hover:shadow-2xl hover:-translate-y-1 transition-all"
           >
-            立即开始心动
-          </a>
+            {user ? '立即开始心动' : '登录后开始心动'}
+          </button>
           <p className="mt-6 text-white/60 text-sm">
             完全免费 · 无需注册 · 立即体验
           </p>
@@ -284,6 +335,32 @@ export function LandingPage() {
           </p>
         </div>
       </footer>
+
+      {/* Login Modal */}
+      {showLogin && (
+        <LoginModalWrapper
+          onClose={() => setShowLogin(false)}
+          onSuccess={() => {
+            setShowLogin(false);
+            document.getElementById('characters')?.scrollIntoView({ behavior: 'smooth' });
+          }}
+        />
+      )}
     </div>
   );
+}
+
+// Login Modal with Auth Context
+import { LoginModal } from './LoginModal';
+import { useRouter } from 'next/navigation';
+
+function LoginModalWrapper({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
+  const router = useRouter();
+
+  const handleSuccess = () => {
+    onSuccess();
+    router.refresh();
+  };
+
+  return <LoginModal isOpen={true} onClose={onClose} onSuccess={handleSuccess} />;
 }
