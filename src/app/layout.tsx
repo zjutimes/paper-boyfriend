@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inspector } from 'react-dev-inspector';
 import { AuthProvider } from '@/context/AuthContext';
+import { VIPProvider } from '@/context/VIPContext';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -21,8 +22,10 @@ export default function RootLayout({
     <html lang="zh-CN">
       <body>
         <AuthProvider>
-          {process.env.NODE_ENV === 'development' && <Inspector />}
-          {children}
+          <VIPProvider>
+            {process.env.NODE_ENV === 'development' && <Inspector />}
+            {children}
+          </VIPProvider>
         </AuthProvider>
       </body>
     </html>

@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useChat } from "@/context/ChatContext";
+import { useVIP } from "@/context/VIPContext";
+import { PaymentModal } from "./PaymentModal";
 import Image from "next/image";
 
 const AVATARS = {
@@ -21,7 +23,13 @@ export function LandingPage() {
         selectCharacter
     } = useChat();
 
+    const { vipStatus } = useVIP();
     const [showLogin, setShowLogin] = useState(false);
+    const [showPayment, setShowPayment] = useState(false);
+
+    const handlePaymentSuccess = (plan: string) => {
+        console.log('VIP activated:', plan);
+    };
 
     const characters = [{
         id: "pan-an",
@@ -130,6 +138,19 @@ export function LandingPage() {
                         className="text-xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">纸片人男友
                                   </h1>
                     {user ? <div className="flex items-center gap-4">
+                        {/* VIP Button */}
+                        {vipStatus.isVIP ? (
+                            <div className="flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-sm font-bold rounded-full">
+                                <span>👑</span>
+                                <span>VIP会员</span>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={() => setShowPayment(true)}
+                                className="px-3 py-1.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-sm font-medium rounded-full hover:shadow-lg transition-all">
+                                开通VIP
+                            </button>
+                        )}
                         <div className="flex items-center gap-2">
                             <div
                                 className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-400 to-purple-400 flex items-center justify-center text-white text-sm font-medium">
@@ -141,10 +162,17 @@ export function LandingPage() {
                             onClick={handleLogout}
                             className="text-sm text-gray-500 hover:text-gray-700">退出
                                           </button>
-                    </div> : <button
-                        onClick={() => setShowLogin(true)}
-                        className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-sm font-medium rounded-full hover:shadow-lg transition-all">登录 / 注册
-                                    </button>}
+                    </div> : <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setShowPayment(true)}
+                            className="px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-sm font-bold rounded-full hover:shadow-lg transition-all">
+                            👑 开通VIP
+                        </button>
+                        <button
+                            onClick={() => setShowLogin(true)}
+                            className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-sm font-medium rounded-full hover:shadow-lg transition-all">登录 / 注册
+                                    </button>
+                    </div>}
                 </div>
             </nav>
             {}
@@ -383,6 +411,12 @@ export function LandingPage() {
                         behavior: "smooth"
                     });
                 }} />}
+            {showPayment && <PaymentModalWrapper
+                onClose={() => setShowPayment(false)}
+                onSuccess={(plan) => {
+                    setShowPayment(false);
+                    handlePaymentSuccess(plan);
+                }} />}
         </div>
     );
 }
@@ -407,4 +441,16 @@ function LoginModalWrapper(
     };
 
     return <LoginModal isOpen={true} onClose={onClose} onSuccess={handleSuccess} />;
+}
+
+function PaymentModalWrapper(
+    {
+        onClose,
+        onSuccess
+    }: {
+        onClose: () => void;
+        onSuccess: (plan: string) => void;
+    }
+) {
+    return <PaymentModal isOpen={true} onClose={onClose} onSuccess={onSuccess} />;
 }
