@@ -11,6 +11,10 @@ import React, {
 import { Character, Message, ChatState } from '@/types/chat';
 import { parseReply, enhanceImagePrompt } from '@/utils/parseReply';
 import { cleanTextForSpeech, isTextEmptyAfterCleaning } from '@/utils/cleanText';
+import { getRandomJoke } from '@/data/jokes';
+
+// 笑话定时器间隔（1小时 = 60 * 60 * 1000 毫秒）
+const JOKE_INTERVAL = 60 * 60 * 1000;
 
 // 初始状态
 const initialState: ChatState = {
@@ -77,17 +81,17 @@ interface ChatContextType {
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
-// 生成唯一 ID
+// 生成唯一 Id
 const generateId = (): string => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
 // 判断是否应该生成语音
 const shouldGenerateVoice = (
   text: string,
   userMessageCount: number,
-  messageType: 'morning' | 'night' | 'normal' = 'normal'
+  messageType: 'morning' | 'night' | 'normal' | 'joke' = 'normal'
 ): boolean => {
   // 定时消息强制带语音
-  if (messageType === 'morning' || messageType === 'night') {
+  if (messageType === 'morning' || messageType === 'night' || messageType === 'joke') {
     return true;
   }
 
@@ -101,9 +105,121 @@ const shouldGenerateVoice = (
   return hasKeyword || userTriggered;
 };
 
+// 发送笑话消息（内部函数）
+const sendJokeMessageInternal = async (
+  character: Character,
+  dispatch: React.Dispatch<Action>,
+  lastJokeIndexRef: React.MutableRefObject<number>
+) => {
+  const { joke, index } = getRandomJoke(character.id, lastJokeIndexRef.current);
+  lastJokeIndexRef.current = index;
+
+  // 组合笑话文本（包含答案提示）
+  const jokeText = joke.hint 
+    ? `${joke.text}\n\n（提示：${joke.hint}）`
+    : joke.text;
+
+  // 显示"正在输入..."
+  dispatch({ type: 'SET_TYPING', payload: true });
+
+  // 模拟输入延迟
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+
+  // 添加笑话消息
+  const jokeMessageId = generateId();
+  const jokeMessage: Message = {
+    id: jokeMessageId,
+    role: 'character',
+    type: 'text',
+    content: jokeText,
+    timestamp: Date.now(),
+    isJoke: true, // 标记为笑话消息
+  };
+  
+  dispatch({ type: 'ADD_MESSAGE', payload: jokeMessage });
+  dispatch({ type: 'SET_TYPING', payload: false });
+
+  // 为笑话生成语音（笑话消息总是带语音）
+  const cleanedText = cleanTextForSpeech(jokeText);
+  if (!isTextEmptyAfterCleaning(jokeText)) {
+    dispatch({ type: 'SET_GENERATING_VOICE', payload: true });
+
+    try {
+      const ttsResponse = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: cleanedText,
+          speaker: character.voice,
+          uid: character.id,
+        }),
+      });
+
+      if (ttsResponse.ok) {
+        const ttsData = await ttsResponse.json();
+        dispatch({
+          type: 'UPDATE_MESSAGE',
+          payload: {
+            id: jokeMessageId,
+            updates: { audioUrl: ttsData.audioUrl, type: 'voice' },
+          },
+        });
+      }
+    } catch {
+      // TTS 失败静默跳过
+    } finally {
+      dispatch({ type: 'SET_GENERATING_VOICE', payload: false });
+    }
+  }
+};
+
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [chatState, dispatch] = useReducer(chatReducer, initialState);
   const isGeneratingRef = useRef(false);
+  const jokeTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastJokeIndexRef = useRef<number>(-1);
+
+  // 启动笑话定时器
+  const startJokeTimer = useCallback(() => {
+    // 清除之前的定时器
+    if (jokeTimerRef.current) {
+      clearInterval(jokeTimerRef.current);
+    }
+
+    // 每小时发送一个笑话
+    jokeTimerRef.current = setInterval(() => {
+      if (chatState.character && !isGeneratingRef.current) {
+        sendJokeMessageInternal(chatState.character, dispatch, lastJokeIndexRef);
+      }
+    }, JOKE_INTERVAL);
+  }, [chatState.character]);
+
+  // 停止笑话定时器
+  const stopJokeTimer = useCallback(() => {
+    if (jokeTimerRef.current) {
+      clearInterval(jokeTimerRef.current);
+      jokeTimerRef.current = null;
+    }
+  }, []);
+
+  // 当选择角色时，启动定时器
+  useEffect(() => {
+    if (chatState.character) {
+      startJokeTimer();
+      
+      // 30秒后发送第一个笑话（测试用），实际可改为更长间隔
+      const initialJokeTimer = setTimeout(() => {
+        if (chatState.character && !isGeneratingRef.current) {
+          sendJokeMessageInternal(chatState.character, dispatch, lastJokeIndexRef);
+        }
+      }, 30000); // 30秒后发送第一个笑话
+      
+      return () => {
+        clearTimeout(initialJokeTimer);
+        stopJokeTimer();
+      };
+    }
+  }, [chatState.character, startJokeTimer, stopJokeTimer]);
 
   // 选择角色
   const selectCharacter = useCallback((character: Character) => {
@@ -113,7 +229,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   // 重置聊天
   const resetChat = useCallback(() => {
     dispatch({ type: 'RESET_CHAT' });
-  }, []);
+    stopJokeTimer();
+  }, [stopJokeTimer]);
 
   // 发送消息
   const sendMessage = useCallback(
@@ -136,11 +253,14 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: 'ADD_MESSAGE', payload: userMessage });
 
       try {
-        // 2. 准备对话历史（限制最近20条）
-        const chatHistory = chatState.messages.slice(-20).map((msg) => ({
-          role: msg.role === 'character' ? 'assistant' : 'user',
-          content: msg.content,
-        }));
+        // 2. 准备对话历史（限制最近20条，排除笑话消息避免影响上下文）
+        const chatHistory = chatState.messages
+          .filter((msg) => !msg.isJoke) // 过滤掉笑话消息
+          .slice(-20)
+          .map((msg) => ({
+            role: msg.role === 'character' ? 'assistant' : 'user',
+            content: msg.content,
+          }));
         chatHistory.push({ role: 'user', content: content.trim() });
 
         // 3. 调用 LLM

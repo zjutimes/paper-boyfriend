@@ -27,6 +27,7 @@ export interface Message {
   imageUrl?: string;
   imagePrompt?: string;
   timestamp: number;
+  isJoke?: boolean; // 是否为笑话消息
 }
 
 // 聊天状态

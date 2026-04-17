@@ -268,6 +268,39 @@ GET /api/email/send?toEmail=xxx&limit=20
 - **session_closed**: 会话关闭通知
 - **general**: 通用通知
 
+## 笑话定时功能
+
+### 定时笑话机制
+- 每个角色选择后自动启动笑话定时器
+- 每隔1小时发送一个角色专属笑话
+- 首次连接30秒后发送第一个笑话
+- 笑话消息自动带语音
+
+### 笑话数据结构
+```typescript
+interface Joke {
+  text: string;      // 笑话内容
+  hint?: string;    // 答案提示
+}
+```
+
+### 角色笑话风格
+- **潘安 (pan-an)**: 温柔体贴型
+- **宋玉 (song-yu)**: 浪漫诗意型
+- **卫玠 (wei-jie)**: 病弱清俊型
+- **兰陵王 (lan-ling)**: 高冷威武型
+
+### 笑话生成API
+```typescript
+import { getRandomJoke, getJokesByCharacterId } from '@/data/jokes';
+
+// 获取指定角色的笑话
+const jokes = getJokesByCharacterId('pan-an');
+
+// 获取随机笑话（避免重复）
+const { joke, index } = getRandomJoke('pan-an', lastIndex);
+```
+
 ## 前端组件
 
 ### CustomerService / CustomerServiceButton
