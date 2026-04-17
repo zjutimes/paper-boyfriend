@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useChat } from "@/context/ChatContext";
 import { useVIP } from "@/context/VIPContext";
 import { PaymentModal } from "./PaymentModal";
+import { CustomerServiceButton } from "./CustomerService";
 import Image from "next/image";
 
 const AVATARS = {
@@ -417,6 +418,9 @@ export function LandingPage() {
                     setShowPayment(false);
                     handlePaymentSuccess(plan);
                 }} />}
+
+            {/* 客服悬浮按钮 */}
+            <CustomerServiceButton />
         </div>
     );
 }

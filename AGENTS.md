@@ -185,6 +185,103 @@ await setAvatar(key);
 - **卫玠** (wei-jie): 魏晋名士，病弱清俊
 - **兰陵王** (lan-ling): 北齐战将，高冷威武
 
+## 客服系统
+
+### 数据库表
+- **customer_service_sessions**: 客服会话表
+- **customer_service_messages**: 客服消息表
+- **email_logs**: 邮件发送记录表
+
+### API接口
+
+#### POST /api/customer-service/sessions
+创建客服会话
+```json
+{
+  "userId": "用户ID",
+  "userEmail": "用户邮箱",
+  "userNickname": "用户昵称",
+  "subject": "问题主题"
+}
+```
+
+#### GET /api/customer-service/sessions
+获取用户会话列表
+```
+GET /api/customer-service/sessions?userId=xxx
+```
+
+#### POST /api/customer-service/messages
+发送消息
+```json
+{
+  "sessionId": "会话ID",
+  "senderType": "user|customer_service|system",
+  "senderId": "发送者ID",
+  "content": "消息内容",
+  "messageType": "text|image|file|system"
+}
+```
+
+#### GET /api/customer-service/messages
+获取会话消息
+```
+GET /api/customer-service/messages?sessionId=xxx
+```
+
+#### PATCH /api/customer-service/close
+关闭会话
+```json
+{
+  "sessionId": "会话ID",
+  "userId": "用户ID"
+}
+```
+
+## 邮件发送系统
+
+### POST /api/email/send
+发送邮件
+```json
+{
+  "toEmail": "收件人邮箱",
+  "template": "customer_session_created|customer_reply|session_closed|general",
+  "data": {
+    "sessionId": "会话ID",
+    "subject": "问题主题",
+    "message": "消息内容"
+  },
+  "customSubject": "自定义主题",
+  "customContent": "自定义内容(HTML)"
+}
+```
+
+### GET /api/email/send
+获取邮件发送日志
+```
+GET /api/email/send?toEmail=xxx&limit=20
+```
+
+### 邮件模板
+- **customer_session_created**: 客服会话创建通知
+- **customer_reply**: 客服回复通知
+- **session_closed**: 会话关闭通知
+- **general**: 通用通知
+
+## 前端组件
+
+### CustomerService / CustomerServiceButton
+客服悬浮按钮组件
+```tsx
+import { CustomerService, CustomerServiceButton } from '@/components/CustomerService';
+
+// 在页面中使用悬浮按钮
+<CustomerServiceButton />
+
+// 或直接使用完整客服窗口
+<CustomerService onClose={() => setOpen(false)} />
+```
+
 ## 关键实现
 
 ### 消息发送流程
