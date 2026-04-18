@@ -5,6 +5,7 @@ import { useChat } from "@/context/ChatContext";
 import { useVIP } from "@/context/VIPContext";
 import { PaymentModal } from "./PaymentModal";
 import { CustomerServiceButton } from "./CustomerService";
+import { ShareButton } from "./ShareModal";
 import Image from "next/image";
 
 const AVATARS = {
@@ -164,6 +165,8 @@ export function LandingPage() {
                             className="text-sm text-gray-500 hover:text-gray-700">退出
                                           </button>
                     </div> : <div className="flex items-center gap-3">
+                        {/* 分享按钮 */}
+                        <ShareButton />
                         <button
                             onClick={() => setShowPayment(true)}
                             className="px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-sm font-bold rounded-full hover:shadow-lg transition-all">
@@ -214,6 +217,11 @@ export function LandingPage() {
                             href="#features"
                             className="px-8 py-4 bg-white text-gray-700 rounded-full font-semibold text-lg border-2 border-gray-200 hover:border-pink-300 transition-all">了解更多
                                         </a>
+                        <button
+                            onClick={() => document.getElementById("share-section")?.scrollIntoView({ behavior: "smooth" })}
+                            className="px-8 py-4 bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded-full font-semibold text-lg hover:shadow-lg hover:shadow-yellow-200 transition-all flex items-center gap-2">
+                            🎁 邀请好友
+                        </button>
                     </div>
                     <p className="mt-8 text-sm text-gray-400">已有 <span className="font-bold text-pink-500">12,847</span>人开始心动
                                   </p>
@@ -326,6 +334,33 @@ export function LandingPage() {
                             <h3 className="text-xl font-bold text-gray-900 mb-2">{step.title}</h3>
                             <p className="text-gray-600">{step.desc}</p>
                         </div>)}
+                    </div>
+                </div>
+            </section>
+            {}
+            {/* 分享区域 */}
+            <section id="share-section" className="py-16 px-4 bg-gradient-to-r from-pink-50 to-purple-50">
+                <div className="max-w-4xl mx-auto">
+                    <div className="bg-white rounded-3xl shadow-lg p-8 md:p-12">
+                        <div className="text-center mb-8">
+                            <div className="text-5xl mb-4">🎁</div>
+                            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">邀请好友，一起心动</h2>
+                            <p className="text-gray-500">每邀请1位好友，双方各得7天VIP体验</p>
+                        </div>
+                        
+                        <div className="flex flex-col md:flex-row items-center justify-center gap-6">
+                            <div className="flex-1 max-w-md">
+                                <ShareButton className="w-full justify-center py-4 text-base" />
+                            </div>
+                            <div className="text-center md:text-left">
+                                <p className="text-sm text-gray-500 mb-2">或扫一扫分享</p>
+                                <img 
+                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${typeof window !== 'undefined' ? encodeURIComponent(window.location.origin) : ''}`}
+                                    alt="分享二维码"
+                                    className="w-28 h-28 mx-auto md:mx-0 bg-white p-2 rounded-xl shadow-sm"
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
