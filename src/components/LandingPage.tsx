@@ -6,6 +6,7 @@ import { useVIP } from "@/context/VIPContext";
 import { PaymentModal } from "./PaymentModal";
 import { CustomerServiceButton } from "./CustomerService";
 import { ShareButton } from "./ShareModal";
+import { CountdownBanner } from "./ui/the-future-arrives-soon-cta";
 import Image from "next/image";
 
 const AVATARS = {
@@ -227,7 +228,11 @@ export function LandingPage() {
                                   </p>
                 </div>
             </section>
-            {}
+
+            {/* 限时优惠倒计时 */}
+            <CountdownBanner onNotify={() => setShowPayment(true)} />
+
+            {/* Pain Points */}
             <section className="py-16 px-4 bg-gray-50">
                 <div className="max-w-4xl mx-auto">
                     <h2
